@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -21,32 +22,19 @@ void error(const char *msg)
 }
 
 
-// recursively add together digits and send.
-void recurse_addition (int sockfd, char buffer [], int buffer_length) {
-    
-    if (buffer_length == 1) {
-        int n = write(sockfd, buffer, 1);
-        if (n < 0) error ("sendto");
-    }
-    else
-        if (buffer_length > 1) {
-            int total = 0;
-            for (int i = 0; i < buffer_length; i++) {
-                total+= buffer[i] -48;
-            }
-            char new_buffer [128];
-            bzero (new_buffer, 128);
-            sprintf (new_buffer, "%d", total);
-            int count = 0;
-            count = strlen (new_buffer);
-            
-            if (count > 1) {
-                int n = write (sockfd, new_buffer, 128);
-                if (n < 0) error ("sendto");
-            }
-            recurse_addition (sockfd, new_buffer, count);
+int check_processes (int &pids [], int num_alive) {
+    for (int i = num_alive-1; i >= 0; i--) {
+        int status;
+        pid_t result = waitpid (pids[i], &status, WNOHANG);
+        if (result > 0) {
+            pids [i] = pids [num_alive-1];
+            pids [num_alive-1] = 0;
+            num_alive --;
         }
+    }
+    return num_alive;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -77,50 +65,53 @@ int main(int argc, char *argv[])
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
     
+    int pids [4];
+    
+    int num_connections = 0;
     while (1) {
         
-        // Listen for incoming connections
-        newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-        int on = 0;
-        setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-        if (newsockfd < 0)
-            error("ERROR on accept");
         
-        bzero(buf,256);
-        n = read(newsockfd,buf,255);
-        if (n < 0) error("ERROR reading from socket");
+        // Check for closed connections here
+        num_connections = check_processes (pids, num_connections);
+        pid_t result = waitpid ()
         
-        // Check that string is all number characters
-        int count = n;
-        int non_num = 0;
-        int ignore_last = 0;
-        for (int i = 0; i < count; i++) {
-            if (i != count-1 && (buf [i] < '0' || buf [i] > '9'))
-                non_num = 1;
-            else if (i == count-1) {
-                if (buf [i] < '0' || buf [i] > '9')
-                    ignore_last = 1;
+        if (num_connections < 4) {
+            // Wait and listen for incoming connections
+            ewsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+        
+            // AND Check for closed connections here
+            num_connections = check_processes (pids, num_connections);
+            
+            pid = fork();
+            if (pid == 0 && num_connections < 3) {
+                // If there are still connections possible
+                //newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+                int on = 0;
+                setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
+                if (newsockfd < 0)
+                    error("ERROR on accept");
+            
+        
+        
+                close(newsockfd);
+                return 0;
+            }
+            else if (pid == 0 && num_connections >= 3) {
+                // If no connections are available and I am a child process
+            
+                return 0;
+            }
+            else {
+                // If I am the parent process
+                pids[num_connections] = pid;
+                num_connections++;
             }
         }
-        
-        if (non_num) {
-            n = write(newsockfd,"Sorry, cannot compute!", 25);
-        }
-        else {
-            char newstr [1024];
-            strcpy(newstr, buf);
-            if (ignore_last) {
-                count = count-1;
-                newstr [count] = '\0';
-            }
-            recurse_addition (newsockfd, newstr, count);
-        }
-        if (n  < 0) error("sendto");
-        
-        close(newsockfd);
         
     }
     close(sockfd);
     return 0;
 }
+
+
 
