@@ -66,6 +66,10 @@ int main(int argc, char *argv[])
     clilen = sizeof(cli_addr);
     
     int pids [4];
+    pids [0] = 0;
+    pids [1] = 0;
+    pids [2] = 0;
+    pids [3] = 0;
     
     int num_connections = 0;
     while (1) {
@@ -73,7 +77,7 @@ int main(int argc, char *argv[])
         
         // Check for closed connections here
         num_connections = check_processes (pids, num_connections);
-        pid_t result = waitpid ()
+        pid_t result = waitpid ();
         
         if (num_connections < 4) {
             // Wait and listen for incoming connections
@@ -84,8 +88,7 @@ int main(int argc, char *argv[])
             
             pid = fork();
             if (pid == 0 && num_connections < 3) {
-                // If there are still connections possible
-                //newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+                // If there are still connections possible, I am the child process
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
                 if (newsockfd < 0)
@@ -98,6 +101,15 @@ int main(int argc, char *argv[])
             }
             else if (pid == 0 && num_connections >= 3) {
                 // If no connections are available and I am a child process
+                
+                int on = 0;
+                setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
+                if (newsockfd < 0)
+                    error("ERROR on accept");
+                
+                
+                
+                close(newsockfd);
             
                 return 0;
             }
