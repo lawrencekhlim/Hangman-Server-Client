@@ -15,8 +15,7 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 
-void error(const char *msg)
-{
+void error(const char *msg) {
     perror(msg);
     exit(1);
 }
@@ -73,11 +72,8 @@ int main(int argc, char *argv[])
     
     int num_connections = 0;
     while (1) {
-        
-        
         // Check for closed connections here
         num_connections = check_processes (pids, num_connections);
-        pid_t result = waitpid ();
         
         if (num_connections < 4) {
             // Wait and listen for incoming connections
@@ -97,6 +93,7 @@ int main(int argc, char *argv[])
         
         
                 close(newsockfd);
+                
                 return 0;
             }
             else if (pid == 0 && num_connections >= 3) {
