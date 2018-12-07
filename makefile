@@ -1,9 +1,13 @@
 compile:
-	gcc hangman_client.c –o hangman_client
-	gcc hangman_server.c -o hangman_server
+	gcc -o hangman_client hangman_client.c 
+	gcc -o hangman_server hangman_server.c 
 server:
-	gcc hangman_server.c -o hangman_server
+	gcc -o hangman_server hangman_server.c 
 client:
-	gcc HangmanClient.c –o hangman_client
+	gcc -o hangman_client hangman_client.c 
+clean:
+	rm *.o 
+	rm hangman_client
+	rm hangman_server
 
 	
