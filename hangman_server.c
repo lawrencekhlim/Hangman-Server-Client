@@ -21,11 +21,7 @@ void error(const char *msg) {
     exit(1);
 }
 
-/*
-void get_possible words (char [][] arr) {
-    
-}
-*/
+
 
 int check_processes (int* pids [], int num_alive) {
     for (int i = num_alive-1; i >= 0; i--) {
@@ -69,11 +65,15 @@ int main(int argc, char *argv[])
     
     int total_words = 0;
     while ( fscanf(hangman_file, "%s", &buffer ) == 1 && total_words < 15) {
-        strcpy (buf_all_words[total_words], buffer);
+        strcpy (buf_all_words[total_words], strlwr(buffer));
         total_words++;
         bzero (buffer, 30);
     }
     
+    if (total_words == 0) {
+        fprintf(stderr, "ERROR, no words in hangman_words.txt\n");
+        exit (1);
+    }
     
     
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -126,8 +126,76 @@ int main(int argc, char *argv[])
                 bzero(buffer,255);
                 int n = read(sockfd,buffer,255);
                 
-                if (n > 0) {
+                if (n > 0 && buffer[0] == '\0') {
+                    int rand = rand() % total_words;
+                    char word_buffer [30];
+                    bzero (word_buffer, 30);
+                    strcpy (word_buffer, buf_all_words[rand]);
                     
+                    int guesses [26] = { 0 };
+                    int num_wrong_guesses = 0;
+                    int word_length = strlen (word_buffer);
+                    int send_length = word_length +3;
+                    int incomplete_word = 1;
+                    char wrong_buffer [10];
+                    bzero (wrong_buffer, 10);
+                    
+                    while (num_wrong_guesses < 6 && incomplete_word) {
+                        char guessed_buffer [30];
+                        bzero (guessed_buffer, 30);
+                        incomplete_word = 0;
+                        for (int i = 0; i < word_length; i++) {
+                            if (guesses [word_buffer [i] - 'a'] == 1)
+                                guessed_buffer[i] = word_buffer[i];
+                            else {
+                                incomplete_word = 1;
+                                guessed_buffer[i] = '_';
+                            }
+                        }
+                        
+                        char send_buffer [40];
+                        send_buffer [0] = 0;
+                        send_buffer [1] = word_length;
+                        send_buffer [2] = num_wrong_guesses;
+                        
+                        strcat (send_buffer, guessed_buffer);
+                        if (num_wrong_guesses > 0) {
+                            strcat (send_buffer, wrong_buffer);
+                        }
+                        
+                        n = write(newsockfd, send_buffer, send_length+num_wrong_guesses);
+                        if (n < 0)
+                            error ("SEND To Client Failure");
+                        
+                        bzero(buffer,255);
+                        n = read(sockfd,buffer,255);
+                        if (n < 0)
+                            error ("READ From Client Failure");
+                        
+                        guesses [buffer[1] - 'a'] = 1;
+                        if (!strchr (word_buffer, buffer [1])) {
+                            wrong_buffer [num_wrong_guesses] = buffer [1];
+                            num_wrong_guesses += 1;
+                        }
+                        
+                    }
+                    
+                    char return_word [20];
+                    
+                    if (! incomplete_word) {
+                        strcpy (return_word, "You Win!");
+                    }
+                    else {
+                        strcpy (return_word, "You Lose :(");
+                    }
+                    char send_buffer [40];
+                    
+                    send_buffer [0] = strlen(return_word);
+                    strcat (send_buffer, return_word);
+                    n = write(newsockfd, send_buffer, strlen(return_word) +1);
+                    if (n < 0)
+                        error ("SEND To Client Failure");
+
                 }
         
         
