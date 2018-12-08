@@ -116,25 +116,40 @@ int main(int argc, char *argv[])
             // AND Check for closed connections here
             num_connections = check_processes (&pids, num_connections);
             
-            int pid = fork();
+	    int pid = fork();
             if (pid == 0 && num_connections < 3) {
                 // If there are still connections possible, I am the child process
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-                if (newsockfd < 0)
+                
+		printf ("After new socket");
+		
+		if (newsockfd < 0)
                     error("ERROR on accept");
                 
                 // Wait for ready to
                 char buffer[255];
                 bzero(buffer,255);
-                int n = read(sockfd,buffer,255);
+
+
+		printf ("Before read");
+
+                int n = read(newsockfd,buffer,255);
                 
-                if (n > 0 && buffer[0] == '\0') {
+		printf ("After read");
+
+		printf ("before if n=%d\n", n);
+                if (n >= 0 && buffer[0] == '\0') {
+		    printf ("after if n=%d\n", n);
                     int random = rand() % total_words;
+		    printf ("-1\n");
                     char word_buffer [30];
                     bzero (word_buffer, 30);
+		    
+		    printf ("0\n");
                     strcpy (word_buffer, buf_all_words[random]);
                     
+		    printf ("1\n");
                     int guesses [26] = { 0 };
                     int num_wrong_guesses = 0;
                     int word_length = strlen (word_buffer);
@@ -143,10 +158,13 @@ int main(int argc, char *argv[])
                     char wrong_buffer [10];
                     bzero (wrong_buffer, 10);
                     
+		    printf ("2\n");
                     while (num_wrong_guesses < 6 && incomplete_word) {
                         char guessed_buffer [30];
                         bzero (guessed_buffer, 30);
                         incomplete_word = 0;
+			
+		        printf ("3\n");
                         for (int i = 0; i < word_length; i++) {
                             if (guesses [word_buffer [i] - 'a'] == 1)
                                 guessed_buffer[i] = word_buffer[i];
@@ -156,6 +174,7 @@ int main(int argc, char *argv[])
                             }
                         }
                         
+		        printf ("Finished constructing string");
                         char send_buffer [40];
                         send_buffer [0] = 0;
                         send_buffer [1] = word_length;
@@ -166,12 +185,16 @@ int main(int argc, char *argv[])
                             strcat (send_buffer, wrong_buffer);
                         }
                         
+		        printf ("Before write");
                         n = write(newsockfd, send_buffer, send_length+num_wrong_guesses);
-                        if (n < 0)
+       
+       
+		        printf ("After write");
+			if (n < 0)
                             error ("SEND To Client Failure");
                         
                         bzero(buffer,255);
-                        n = read(sockfd,buffer,255);
+                        n = read(newsockfd,buffer,255);
                         if (n < 0)
                             error ("READ From Client Failure");
                         
@@ -211,7 +234,11 @@ int main(int argc, char *argv[])
                 
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-                if (newsockfd < 0)
+                
+		
+		printf ("After new socket, child, wrong location");
+		
+		if (newsockfd < 0)
                     error("ERROR on accept");
                 char buffer [18];
                 buffer [0] = '\17';
@@ -226,7 +253,10 @@ int main(int argc, char *argv[])
             }
             else {
                 // If I am the parent process
-                pids[num_connections] = pid;
+        
+		printf ("After new socket, parent");
+
+	        pids[num_connections] = pid;
                 num_connections++;
             }
         }
