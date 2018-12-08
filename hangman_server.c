@@ -65,8 +65,11 @@ int main(int argc, char *argv[])
     
     int total_words = 0;
     while ( fscanf(hangman_file, "%s", &buffer ) == 1 && total_words < 15) {
-        strcpy (buf_all_words[total_words], strlwr(buffer));
-        total_words++;
+        for(int i = 0; buffer[i]; i++){
+            buffer[i] = tolower(buffer[i]);
+        }
+        strcpy (buf_all_words[total_words], buffer);
+	total_words++;
         bzero (buffer, 30);
     }
     
@@ -127,10 +130,10 @@ int main(int argc, char *argv[])
                 int n = read(sockfd,buffer,255);
                 
                 if (n > 0 && buffer[0] == '\0') {
-                    int rand = rand() % total_words;
+                    int random = rand() % total_words;
                     char word_buffer [30];
                     bzero (word_buffer, 30);
-                    strcpy (word_buffer, buf_all_words[rand]);
+                    strcpy (word_buffer, buf_all_words[random]);
                     
                     int guesses [26] = { 0 };
                     int num_wrong_guesses = 0;
