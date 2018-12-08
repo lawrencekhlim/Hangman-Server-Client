@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
     char start[64];
     fgets(start,64,stdin);
     if(start[0] == 'n'){
+      close(sockfd);
       return 0;
     }
 
