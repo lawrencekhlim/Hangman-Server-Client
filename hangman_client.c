@@ -119,19 +119,21 @@ int main(int argc, char *argv[])
 
 
 
+
+
+    char out [1];
+    out[0]='\0';
+    int n = write(sockfd,out,1);
+    if (n < 0)
+         error("ERROR writing to socket");
+
+
     printf("Ready to start game? (y/n):");
     char start[64];
     fgets(start,64,stdin);
     if(start[0] == 'n'){
       return 0;
     }
-
-    //TODO:check if this works
-    char out [1];
-    out[0]='\0';
-    int n = write(sockfd,out,1);
-    if (n < 0)
-         error("ERROR writing to socket");
 
 
 
