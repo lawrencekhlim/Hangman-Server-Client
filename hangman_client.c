@@ -25,7 +25,7 @@ void write_to_server(int sockfd, char out){
        error("ERROR writing to socket");
 }
 
-char* read_from_server(char** incorrect, int* num_incorrect, bool& done ){
+char* read_from_server(int sockfd, char** incorrect, int* num_incorrect, int* done ){
   char buffer[255];
   bzero(buffer,255);
   int n = read(sockfd,buffer,255);
@@ -33,17 +33,17 @@ char* read_from_server(char** incorrect, int* num_incorrect, bool& done ){
        error("ERROR reading from socket");
   if(buffer[0] == 0){
     int msglen = buffer[1];
-    num_incorrect = buffer[2];
+    *num_incorrect = buffer[2];
     char *str = malloc(msglen + 1);
-    done = true;
+    *done = 1;
     for(int i=0;i<msglen;i++){
       str[i] = buffer[i+3];
       if(str[i] == '_'){
-        done = false;
+        done = 0;
       }
     }
-    for(int i=0;i<num_incorrect;i++){
-      incorrect[i] = buffer[i+msglen+3];
+    for(int i=0;i<(*num_incorrect);i++){
+      (*incorrect[i]) = buffer[i+msglen+3];
     }
     return str;
   }
@@ -60,14 +60,13 @@ char* read_from_server(char** incorrect, int* num_incorrect, bool& done ){
 }
 
 
-//returns true when the game is ended
-bool handle_message_from_server(){
-  char[6] incorrect;
+int handle_message_from_server(int sockfd) {
+  char incorrect[6];
   int num_incorrect;
-  bool done=false;
+  int done=0;
 
   num_incorrect=-1;
-  char* msg = read_from_server(&incorrect,&num_incorrect, &done);
+  char* msg = read_from_server(sockfd,&incorrect,&num_incorrect, &done);
   printf("%s\n",msg);
   if(num_incorrect!=-1){
     printf("Incorrect Guesses: ");
@@ -77,9 +76,9 @@ bool handle_message_from_server(){
     printf("\n");
   }
   if(num_incorrect == 6 || done){
-    return true;
+    return 1;
   }
-  return false;
+  return 0;
 }
 
 
@@ -126,12 +125,12 @@ int main(int argc, char *argv[])
     int n = write(sockfd,out,1);
     if (n < 0)
          error("ERROR writing to socket");
-    }
 
 
 
-    bool done = handle_message_from_server();
-    while(!done){
+
+    int done = handle_message_from_server(sockfd);
+    while(done == 0){
 
       char input[64];
       do {
@@ -143,10 +142,10 @@ int main(int argc, char *argv[])
       } while(strlen(input) != 1);
 
       write_to_server(sockfd, tolower(input[0]));
-      done = handle_message_from_server();
+      done = handle_message_from_server(sockfd);
     }
-    
-    handle_message_from_server();
+
+    handle_message_from_server(sockfd);
 
 
 
