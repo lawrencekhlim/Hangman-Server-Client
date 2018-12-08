@@ -15,16 +15,22 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 
+
 void error(const char *msg) {
     perror(msg);
     exit(1);
 }
 
+/*
+void get_possible words (char [][] arr) {
+    
+}
+*/
 
-int check_processes (int &pids [], int num_alive) {
+int check_processes (int* pids [], int num_alive) {
     for (int i = num_alive-1; i >= 0; i--) {
         int status;
-        pid_t result = waitpid (pids[i], &status, WNOHANG);
+        pid_t result = waitpid (*pids[i], &status, WNOHANG);
         if (result > 0) {
             pids [i] = pids [num_alive-1];
             pids [num_alive-1] = 0;
@@ -46,6 +52,30 @@ int main(int argc, char *argv[])
         fprintf(stderr,"ERROR, no port provided\n");
         exit(1);
     }
+    
+    // READ FROM hangman_words.txt
+    FILE *hangman_file  = fopen("hangman_words.txt", "r"); // read only
+    if (hangman_file == NULL) {
+        fprintf(stderr, "ERROR, could not open hangman_words.txt\n");
+        exit (1);
+    }
+    char buf_all_words[30][15];
+    char buffer[30];
+    bzero (buffer, 30);
+    
+    for (int i = 0; i < 15; i++) {
+        bzero (buf_all_words[i], 30);
+    }
+    
+    int total_words = 0;
+    while ( fscanf(hangman_file, "%s", &buffer ) == 1 && total_words < 15) {
+        strcpy (buf_all_words[total_words], buffer);
+        total_words++;
+        bzero (buffer, 30);
+    }
+    
+    
+    
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     int on = 0;
     setsockopt(sockfd, SOCK_RDM, TCP_NODELAY, (const char *)&on, sizeof(int));
@@ -61,6 +91,7 @@ int main(int argc, char *argv[])
     if (bind(sockfd, (struct sockaddr *) &serv_addr,  sizeof(serv_addr)) < 0)
         error("ERROR on binding");
     
+    
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
     
@@ -73,23 +104,31 @@ int main(int argc, char *argv[])
     int num_connections = 0;
     while (1) {
         // Check for closed connections here
-        num_connections = check_processes (pids, num_connections);
+        num_connections = check_processes (&pids, num_connections);
         
         if (num_connections < 4) {
             // Wait and listen for incoming connections
-            ewsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+            newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         
             // AND Check for closed connections here
-            num_connections = check_processes (pids, num_connections);
+            num_connections = check_processes (&pids, num_connections);
             
-            pid = fork();
+            int pid = fork();
             if (pid == 0 && num_connections < 3) {
                 // If there are still connections possible, I am the child process
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
                 if (newsockfd < 0)
                     error("ERROR on accept");
-            
+                
+                // Wait for ready to
+                char buffer[255];
+                bzero(buffer,255);
+                int n = read(sockfd,buffer,255);
+                
+                if (n > 0) {
+                    
+                }
         
         
                 close(newsockfd);
@@ -103,7 +142,11 @@ int main(int argc, char *argv[])
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
                 if (newsockfd < 0)
                     error("ERROR on accept");
-                
+                char buffer [18];
+                buffer [0] = '\17';
+                strcat (buffer,  "server-overloaded");
+                n=write(newsockfd, buffer, strlen (buffer));
+                if (n < 0) error("Sendto");
                 
                 
                 close(newsockfd);
