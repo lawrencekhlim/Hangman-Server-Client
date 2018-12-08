@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
         printf("Letter to guess: ");
         fgets(input,64,stdin);
         if(strlen(input) != 2){
-          printf("Error! Please guess one letter.");
+          printf("Error! Please guess one letter.\n");
         }
       } while(strlen(input) != 2);
 
