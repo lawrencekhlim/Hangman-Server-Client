@@ -1,4 +1,4 @@
-compile:
+all:
 	gcc -o hangman_client hangman_client.c 
 	gcc -o hangman_server hangman_server.c 
 server:
