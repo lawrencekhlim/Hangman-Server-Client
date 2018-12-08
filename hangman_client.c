@@ -139,10 +139,10 @@ int main(int argc, char *argv[])
       do {
         printf("Letter to guess: ");
         fgets(input,64,stdin);
-        if(strlen(input) != 1){
+        if(strlen(input) != 2){
           printf("Error! Please guess one letter.");
         }
-      } while(strlen(input) != 1);
+      } while(strlen(input) != 2);
 
       write_to_server(sockfd, tolower(input[0]));
       done = handle_message_from_server(sockfd);
