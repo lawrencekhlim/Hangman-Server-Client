@@ -197,18 +197,32 @@ int main(int argc, char *argv[])
                         send_buffer [0] = 0;
                         send_buffer [1] = word_length;
                         send_buffer [2] = num_wrong_guesses;
-                        
-                        strcat (send_buffer, guessed_buffer);
-                        if (num_wrong_guesses > 0) {
-                            strcat (send_buffer, wrong_buffer);
+                        printf ("len guessed = %d", strlen (guessed_buffer));
+        
+                        printf ("len wrong = %d", strlen (wrong_buffer));
+			for (int i = 0; i < strlen (guessed_buffer); i++) {
+                            send_buffer[i+3] = guessed_buffer[i];
+			    printf (send_buffer);
+			}
+
+                        //strcat (send_buffer, guessed_buffer);
+                        if (num_wrong_guesses > 0) { 
+                            for (int i = 0; i < strlen (wrong_buffer); i++) {
+                                send_buffer[i+3+word_length] = wrong_buffer[i];
+			    }
                         }
                         
                         printf (send_buffer);
-                        //printf ("Before write");
+			//fflush (stdout);
+                        printf ("Before write");
+                        printf ("%d", send_length);
+			fflush (stdout);
                         n = write(newsockfd, send_buffer, send_length+num_wrong_guesses);
                         
                         
-                        //printf ("After write");
+                        printf ("After write");
+			
+			fflush (stdout);
                         if (n < 0)
                             error ("SEND To Client Failure");
                         
