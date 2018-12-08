@@ -23,6 +23,7 @@ void write_to_server(int sockfd, char out){
   n = write(sockfd,output,2);
   if (n < 0)
        error("ERROR writing to socket");
+   printf("other writes\n");
 }
 
 char* read_from_server(int sockfd, char** incorrect, int* num_incorrect, int* done ){
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
     int n = write(sockfd,out,1);
     if (n < 0)
          error("ERROR writing to socket");
-
+    printf("first write\n");
 
 
 
