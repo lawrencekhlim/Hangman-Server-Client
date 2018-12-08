@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <ctype.h>
 
 void error(const char *msg)
 {
@@ -26,7 +27,7 @@ void write_to_server(int sockfd, char out){
    printf("other writes\n");
 }
 
-char* read_from_server(int sockfd, char** incorrect, int* num_incorrect, int* done ){
+char* read_from_server(int sockfd, char* incorrect, int* num_incorrect, int* done ){
   char buffer[255];
   bzero(buffer,255);
   int n = read(sockfd,buffer,255);
@@ -44,7 +45,7 @@ char* read_from_server(int sockfd, char** incorrect, int* num_incorrect, int* do
       }
     }
     for(int i=0;i<(*num_incorrect);i++){
-      (*incorrect[i]) = buffer[i+msglen+3];
+      incorrect[i] = buffer[i+msglen+3];
     }
     return str;
   }
@@ -67,7 +68,7 @@ int handle_message_from_server(int sockfd) {
   int done=0;
 
   num_incorrect=-1;
-  char* msg = read_from_server(sockfd,&incorrect,&num_incorrect, &done);
+  char* msg = read_from_server(sockfd,incorrect,&num_incorrect, &done);
   printf("%s\n",msg);
   if(num_incorrect!=-1){
     printf("Incorrect Guesses: ");
