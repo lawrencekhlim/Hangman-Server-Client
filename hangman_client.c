@@ -33,17 +33,21 @@ char* read_from_server(int sockfd, char* incorrect, int* num_incorrect, int* don
   int n = read(sockfd,buffer,255);
   if (n < 0)
        error("ERROR reading from socket");
+
   if(buffer[0] == 0){
     int msglen = buffer[1];
     *num_incorrect = buffer[2];
     char *str = malloc(msglen + 1);
+
     *done = 1;
     for(int i=0;i<msglen;i++){
       str[i] = buffer[i+3];
       if(str[i] == '_'){
-        done = 0;
+        *done = 0;
       }
     }
+
+
     for(int i=0;i<(*num_incorrect);i++){
       incorrect[i] = buffer[i+msglen+3];
     }
@@ -52,11 +56,11 @@ char* read_from_server(int sockfd, char* incorrect, int* num_incorrect, int* don
   else{
     int msglen = buffer[0];
     char *str = malloc(msglen + 1);
-    memset(str, 0, msglen);
+    memset(str, 0, msglen+1);
     for(int i=0;i<msglen;i++){
       str[i] = buffer[i+1];
     }
-    str[msglen] = '\0';
+
     return str;
   }
 }
@@ -70,6 +74,7 @@ int handle_message_from_server(int sockfd) {
   num_incorrect=-1;
   char* msg = read_from_server(sockfd,incorrect,&num_incorrect, &done);
   printf("%s\n",msg);
+
   if(num_incorrect!=-1){
     printf("Incorrect Guesses: ");
     for(int i=0;i<num_incorrect;i++){
