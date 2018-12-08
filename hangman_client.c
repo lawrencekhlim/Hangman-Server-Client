@@ -123,7 +123,8 @@ int main(int argc, char *argv[])
     }
 
     //TODO:check if this works
-    char out = 0;
+    char out [1];
+    out[0]='\0';
     int n = write(sockfd,out,1);
     if (n < 0)
          error("ERROR writing to socket");
