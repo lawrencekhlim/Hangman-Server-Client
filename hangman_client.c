@@ -24,7 +24,6 @@ void write_to_server(int sockfd, char out){
   n = write(sockfd,output,2);
   if (n < 0)
        error("ERROR writing to socket");
-   printf("other writes\n");
 }
 
 char* read_from_server(int sockfd, char* incorrect, int* num_incorrect, int* done ){
@@ -60,7 +59,7 @@ char* read_from_server(int sockfd, char* incorrect, int* num_incorrect, int* don
     for(int i=0;i<msglen;i++){
       str[i] = buffer[i+1];
     }
-
+    *done=1;
     return str;
   }
 }
@@ -74,7 +73,9 @@ int handle_message_from_server(int sockfd) {
   num_incorrect=-1;
   char* msg = read_from_server(sockfd,incorrect,&num_incorrect, &done);
   printf("%s\n",msg);
-
+  if(num_incorrect == 6 || done == 1){
+    return 1;
+  }
   if(num_incorrect!=-1){
     printf("Incorrect Guesses: ");
     for(int i=0;i<num_incorrect;i++){
@@ -82,9 +83,7 @@ int handle_message_from_server(int sockfd) {
     }
     printf("\n");
   }
-  if(num_incorrect == 6 || done){
-    return 1;
-  }
+
   return 0;
 }
 
@@ -133,7 +132,6 @@ int main(int argc, char *argv[])
     int n = write(sockfd,out,1);
     if (n < 0)
          error("ERROR writing to socket");
-    printf("first write\n");
 
 
 
@@ -153,7 +151,6 @@ int main(int argc, char *argv[])
       done = handle_message_from_server(sockfd);
     }
 
-    handle_message_from_server(sockfd);
 
 
 
