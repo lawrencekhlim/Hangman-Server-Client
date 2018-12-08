@@ -26,20 +26,20 @@ void error(const char *msg) {
 int check_processes (int* pids, int num_alive) {
     for (int i = num_alive-1; i >= 0; i--) {
         int status;
-	printf ("i = %d\n", i);
-	fflush (stdout);
+        //printf ("i = %d\n", i);
+        //fflush (stdout);
         pid_t result = waitpid (pids[i], &status, WNOHANG);
         if (result > 0) {
-	    //printf ("End for i = %d\n", i);
-	    //fflush (stdout);
+            //printf ("End for i = %d\n", i);
+            //fflush (stdout);
             pids [i] = pids [num_alive-1];
             pids [num_alive-1] = 0;
             num_alive --;
-       	}
-
-
-	printf ("End for i = %d\n", i);
-	fflush (stdout);
+        }
+        
+        
+        //printf ("End for i = %d\n", i);
+        //fflush (stdout);
     }
     return num_alive;
 }
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
         fprintf(stderr,"ERROR, no port provided\n");
         exit(1);
     }
-   
-    //* 
+    
+    //*
     // READ FROM hangman_words.txt
     FILE *hangman_file  = fopen("hangman_words.txt", "r"); // read only
     if (hangman_file == NULL) {
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
             buffer[i] = tolower(buffer[i]);
         }
         strcpy (buf_all_words[total_words], buffer);
-	total_words++;
+        total_words++;
         bzero (buffer, 30);
     }
     
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "ERROR, no words in hangman_words.txt\n");
         exit (1);
     }
-   // */
+    // */
     
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     int on = 0;
@@ -116,92 +116,58 @@ int main(int argc, char *argv[])
     int num_connections = 0;
     while (1) {
         // Check for closed connections here
-	//
-	
-	printf ("Before check_processes, parent");
+        //
+        
+        //printf ("Before check_processes, parent");
         fflush (stdout);
         num_connections = check_processes (pids, num_connections);
         
-	printf ("After check_processes, parent");
+        //printf ("After check_processes, parent");
         fflush (stdout);
         if (num_connections < 4) {
             // Wait and listen for incoming connections
             newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-        
+            
             // AND Check for closed connections here
             num_connections = check_processes (pids, num_connections);
             
-	    int pid = fork();
-	    printf ("pid=%d", pid);
-	    fflush (stdout);
+            int pid = fork();
+            //printf ("pid=%d", pid);
+            fflush (stdout);
             if (pid == 0 && num_connections < 3) {
                 // If there are still connections possible, I am the child process
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
                 
-		printf ("After new socket");
-		
-		if (newsockfd < 0)
+                //printf ("After new socket");
+                
+                if (newsockfd < 0)
                     error("ERROR on accept");
                 
                 // Wait for ready to
                 char buffer[255];
                 bzero(buffer,255);
-
-
-		printf ("Before read");
-
+                
+                
+                //printf ("Before read");
+                
                 int n = read(newsockfd,buffer,255);
                 
-		printf ("After read");
-
-		printf ("before if n=%d\n", n);
+                //printf ("After read");
+                
+                //printf ("before if n=%d\n", n);
                 if (n >= 0 && buffer[0] == '\0') {
-		    printf ("after if n=%d\n", n);
-
-
-
-/*
-    // READ FROM hangman_words.txt
-    FILE *hangman_file  = fopen("hangman_words.txt", "r"); // read only
-    if (hangman_file == NULL) {
-        fprintf(stderr, "ERROR, could not open hangman_words.txt\n");
-        exit (1);
-    }
-    char buf_all_words[30][15];
-    char buffer[30];
-    bzero (buffer, 30);
-    
-    for (int i = 0; i < 15; i++) {
-        bzero (buf_all_words[i], 30);
-    }
-    
-    int total_words = 0;
-    while ( fscanf(hangman_file, "%s", &buffer ) == 1 && total_words < 15) {
-        for(int i = 0; buffer[i]; i++){
-            buffer[i] = tolower(buffer[i]);
-        }
-        strcpy (buf_all_words[total_words], buffer);
-	total_words++;
-        bzero (buffer, 30);
-    }
-    printf (buf_all_words [total_words-1]); 
-    if (total_words == 0) {
-        fprintf(stderr, "ERROR, no words in hangman_words.txt\n");
-        exit (1);
-    }
-
-    fclose (hangman_file);
-  */ 
+                    //printf ("after if n=%d\n", n);
+                    
                     int random = rand() % total_words;
-		    printf ("-1\n");
+                    //printf ("-1\n");
                     char word_buffer [30];
                     bzero (word_buffer, 30);
-		    printf ("0Attempting to print word_buffer\n");
+                    //printf ("0Attempting to print word_buffer\n");
                     strcpy (word_buffer, buf_all_words[random]);
                     
-		    printf (word_buffer);
-		    printf ("1\n");
+                    //printf (word_buffer);
+                    //printf ("1\n");
                     int guesses [26] = { 0 };
                     int num_wrong_guesses = 0;
                     int word_length = strlen (word_buffer);
@@ -210,13 +176,13 @@ int main(int argc, char *argv[])
                     char wrong_buffer [10];
                     bzero (wrong_buffer, 10);
                     
-		    printf ("2\n");
+                    //printf ("2\n");
                     while (num_wrong_guesses < 6 && incomplete_word) {
                         char guessed_buffer [30];
                         bzero (guessed_buffer, 30);
                         incomplete_word = 0;
-			
-		        printf ("3\n");
+                        
+                        //printf ("3\n");
                         for (int i = 0; i < word_length; i++) {
                             if (guesses [word_buffer [i] - 'a'] == 1)
                                 guessed_buffer[i] = word_buffer[i];
@@ -226,7 +192,7 @@ int main(int argc, char *argv[])
                             }
                         }
                         
-		        printf ("Finished constructing string");
+                        //printf ("Finished constructing string");
                         char send_buffer [40];
                         send_buffer [0] = 0;
                         send_buffer [1] = word_length;
@@ -237,12 +203,13 @@ int main(int argc, char *argv[])
                             strcat (send_buffer, wrong_buffer);
                         }
                         
-		        printf ("Before write");
+                        printf (send_buffer);
+                        //printf ("Before write");
                         n = write(newsockfd, send_buffer, send_length+num_wrong_guesses);
-       
-       
-		        printf ("After write");
-			if (n < 0)
+                        
+                        
+                        //printf ("After write");
+                        if (n < 0)
                             error ("SEND To Client Failure");
                         
                         bzero(buffer,255);
@@ -273,10 +240,10 @@ int main(int argc, char *argv[])
                     n = write(newsockfd, send_buffer, strlen(return_word) +1);
                     if (n < 0)
                         error ("SEND To Client Failure");
-
+                    
                 }
-        
-        
+                
+                
                 close(newsockfd);
                 
                 return 0;
@@ -287,10 +254,10 @@ int main(int argc, char *argv[])
                 int on = 0;
                 setsockopt(newsockfd, SOL_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
                 
-		
-		printf ("After new socket, child, wrong location");
-		
-		if (newsockfd < 0)
+                
+                //printf ("After new socket, child, wrong location");
+                
+                if (newsockfd < 0)
                     error("ERROR on accept");
                 char buffer [18];
                 buffer [0] = '\17';
@@ -300,20 +267,20 @@ int main(int argc, char *argv[])
                 
                 
                 close(newsockfd);
-            
+                
                 return 0;
             }
             else {
                 // If I am the parent process
-        
-		printf ("After new socket, parent num_con=%d", num_connections);
-                fflush (stdout);
-	        pids[num_connections] = pid;
+                
+                //printf ("After new socket, parent num_con=%d", num_connections);
+                //fflush (stdout);
+                pids[num_connections] = pid;
                 num_connections++;
-
-		
-		printf ("Update PIDS, parent");
-                fflush (stdout);
+                
+                
+                //printf ("Update PIDS, parent");
+                //fflush (stdout);
             }
         }
         
